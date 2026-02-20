@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Master Sheet – All Committees</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial; background: #eaf0e6; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: auto; background: white; padding: 20px; border-radius: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 6px; text-align: left; font-size: 0.9rem; }
+        th { background: #1e4a3a; color: white; position: sticky; top: 0; }
+        .logout { background: #a33; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Master Sheet – All Committee Records</h2>
+        <button onclick="logout()" class="logout">Logout</button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Committee</th><th>Timestamp</th><th>Strategic Theme</th><th>Initiatives</th><th>KPI</th>
+                    <th>Quarter</th><th>Responsible</th><th>Timing</th><th>Budget</th><th>Variance</th><th>Comments</th>
+                </tr>
+            </thead>
+            <tbody id="recordsBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const supabase = supabase.createClient(
+            'https://cfwrxwzqfbegmqlxldyz.supabase.co', // REPLACE
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmd3J4d3pxZmJlZ21xbHhsZHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1Mjk4OTEsImV4cCI6MjA4NzEwNTg5MX0.5fZdC5W8S-8O0nrhelhvaSDxMMc45M6xFLO45xKx_q8'                      // REPLACE
+        );
+
+        async function init() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Verify admin role
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
+
+            if (!profile || profile.role !== 'admin') {
+                alert('Access denied. Admins only.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+
+            loadAllRecords();
+        }
+
+        async function loadAllRecords() {
+            const { data, error } = await supabase
+                .from('records')
+                .select(`
+                    *,
+                    committees!inner(name)
+                `)
+                .order('timestamp', { ascending: false });
+
+            if (error) console.error(error);
+            else renderRecords(data);
+        }
+
+        function renderRecords(records) {
+            const tbody = document.getElementById('recordsBody');
+            tbody.innerHTML = '';
+            records.forEach(rec => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${rec.committees.name}</td>
+                    <td>${new Date(rec.timestamp).toLocaleString()}</td>
+                    <td>${rec.strategic_theme || ''}</td>
+                    <td>${rec.initiatives || ''}</td>
+                    <td>${rec.kpi_measures || ''}</td>
+                    <td>${rec.quarter || ''}</td>
+                    <td>${rec.responsible_committee || ''}</td>
+                    <td>${rec.timing || ''}</td>
+                    <td>${rec.budget || ''}</td>
+                    <td>${rec.variance || ''}</td>
+                    <td>${rec.comments || ''}</td>
+                `;
+            });
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PCM Committee Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: Arial; background: #eaf0e6; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-box { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; }
+        button { width: 100%; padding: 12px; background: #1e4a3a; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .error { color: red; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h2>Committee Login</h2>
+        <input type="email" id="email" placeholder="Email" />
+        <input type="password" id="password" placeholder="Password" />
+        <button onclick="login()">Login</button>
+        <p class="error" id="error"></p>
+    </div>
+
+    <script>
+        const supabase = supabase.createClient(
+            'https://cfwrxwzqfbegmqlxldyz.supabase.co', // REPLACE with your Supabase URL
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmd3J4d3pxZmJlZ21xbHhsZHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1Mjk4OTEsImV4cCI6MjA4NzEwNTg5MX0.5fZdC5W8S-8O0nrhelhvaSDxMMc45M6xFLO45xKx_q8'                      // REPLACE with your Supabase anon key
+        );
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) {
+                document.getElementById('error').innerText = error.message;
+            } else {
+                // After login, get the user's role from profiles
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (profile && profile.role === 'admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
