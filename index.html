@@ -1,52 +1,231 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>PCM Committee Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <title>UNZA · Campus Ministries | Committee Portal + Leader Hub</title>
+    <!-- SEO & i18n ready -->
+    <meta name="description" content="Campus Ministries committees portal – secure, offline‑ready, daily devotion. KJV & EGW. Leader dashboard integrated.">
+    <meta name="theme-color" content="#1c4b3c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <!-- Fonts: Inter + legacy serif for verses -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- FullCalendar -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <!-- Supabase JS client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { font-family: Arial; background: #eaf0e6; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-box { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 300px; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 8px; }
-        button { width: 100%; padding: 12px; background: #1e4a3a; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        .error { color: red; font-size: 0.9rem; }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="login-box">
-        <h2>Committee Login</h2>
-        <input type="email" id="email" placeholder="Email" />
-        <input type="password" id="password" placeholder="Password" />
-        <button onclick="login()">Login</button>
-        <p class="error" id="error"></p>
+    <!-- premium nature background -->
+    <div class="nature-backdrop"></div>
+    <div class="overlay-soft"></div>
+
+    <!-- ========= MODERN TOGGLE SIDEBAR ========= -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <i class="fas fa-tree"></i>
+            </div>
+            <div class="sidebar-title">UNZA CM</div>
+            <div class="sidebar-sub">Campus Ministries</div>
+        </div>
+
+        <!-- MENU WITH WORKING ANCHOR LINKS -->
+        <div class="sidebar-menu">
+            <a href="#committees-section" class="sidebar-menu-item active" onclick="toggleSidebarIfMobile()">
+                <i class="fas fa-users"></i>
+                <span>Committees</span>
+            </a>
+            <a href="#calendar-section" class="sidebar-menu-item" onclick="toggleSidebarIfMobile()">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#daily-bread-section" class="sidebar-menu-item" onclick="toggleSidebarIfMobile()">
+                <i class="fas fa-bible"></i>
+                <span>Daily Bread</span>
+            </a>
+            <a href="#egw-section" class="sidebar-menu-item" onclick="toggleSidebarIfMobile()">
+                <i class="fas fa-feather-alt"></i>
+                <span>EGW Quotes</span>
+            </a>
+            <a href="#notepad-section" class="sidebar-menu-item" onclick="toggleSidebarIfMobile()">
+                <i class="fas fa-pen-fancy"></i>
+                <span>Notepad</span>
+            </a>
+            <a href="#settings-section" class="sidebar-menu-item" onclick="toggleSidebarIfMobile()">
+                <i class="fas fa-shield-haltered"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div><i class="fas fa-shield-alt"></i> 20 committees · secure</div>
+            <div><i class="fas fa-lock"></i> Offline-ready</div>
+            <div style="margin-top: 12px;"><i class="fas fa-cross"></i> Trust in the LORD</div>
+        </div>
     </div>
 
-    <script>
-        const supabase = supabase.createClient(
-            'https://cfwrxwzqfbegmqlxldyz.supabase.co', // REPLACE with your Supabase URL
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNmd3J4d3pxZmJlZ21xbHhsZHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1Mjk4OTEsImV4cCI6MjA4NzEwNTg5MX0.5fZdC5W8S-8O0nrhelhvaSDxMMc45M6xFLO45xKx_q8'                      // REPLACE with your Supabase anon key
-        );
+    <!-- ========= MODERN TOGGLE BUTTON ========= -->
+    <div class="menu-toggle" id="menuToggle">
+        <i class="fas fa-bars"></i>
+    </div>
 
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) {
-                document.getElementById('error').innerText = error.message;
-            } else {
-                // After login, get the user's role from profiles
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', data.user.id)
-                    .single();
+    <!-- ========= MAIN CONTENT ========= -->
+    <div class="main-content" id="mainContent">
+        <div class="main-wrapper">
+            <!-- Header with user info and login/logout -->
+            <header class="app-header">
+                <h1><i class="fas fa-leaf"></i> UNZA Campus Ministries</h1>
+                <div class="user-area">
+                    <span id="user-email-display"></span>
+                    <button id="login-btn-header" class="btn-outline"><i class="fas fa-sign-in-alt"></i> Login</button>
+                    <button id="logout-btn-header" class="btn-outline" style="display:none;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </header>
 
-                if (profile && profile.role === 'admin') {
-                    window.location.href = 'admin.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
-            }
-        }
-    </script>
+            <!-- Authentication Modal (hidden by default) -->
+            <div id="auth-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-modal">&times;</span>
+                    <h2>UNZA Campus Ministries</h2>
+                    <div class="auth-tabs">
+                        <button class="tab-btn active" id="login-tab">Login</button>
+                        <button class="tab-btn" id="signup-tab">Sign Up</button>
+                    </div>
+                    <div id="login-form" class="auth-form active">
+                        <input type="email" id="login-email" placeholder="Email" />
+                        <input type="password" id="login-password" placeholder="Password" />
+                        <button id="login-btn">Login</button>
+                        <p id="login-error" class="error-message"></p>
+                    </div>
+                    <div id="signup-form" class="auth-form">
+                        <input type="email" id="signup-email" placeholder="Email" />
+                        <input type="password" id="signup-password" placeholder="Password" />
+                        <button id="signup-btn">Sign Up</button>
+                        <p id="signup-error" class="error-message"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Sections -->
+            <div id="committees-section" class="content-section active">
+                <!-- This section will be populated by JavaScript based on user role -->
+                <div id="committees-placeholder"></div>
+            </div>
+
+            <div id="calendar-section" class="content-section">
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 18px; flex-wrap: wrap;">
+                        <i class="fas fa-calendar-alt" style="font-size: 1.8rem; color: #386a4e;"></i>
+                        <span style="font-weight: 650; color: #1a4437; font-size: 1.2rem;">Zambia · Prayer Calendar</span>
+                    </div>
+                    <div class="calendar-container">
+                        <div id="calendar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="daily-bread-section" class="content-section">
+                <div class="card daily-box">
+                    <div class="verse-title">
+                        <i class="fas fa-bible"></i> Daily Bread — King James Version
+                    </div>
+                    <div id="dailyVerseText" class="verse-text">
+                        "Trust in the LORD with all thine heart; and lean not unto thine own understanding."
+                    </div>
+                    <div id="dailyVerseRef" class="verse-ref">— Proverbs 3:5</div>
+
+                    <hr>
+                    <div id="egw-section" class="egw-title">
+                        <i class="fas fa-feather-alt"></i> Ellen G. White · Leadership
+                    </div>
+                    <div id="egwDailyQuote" class="egw-quote">
+                        "The Lord does not use men who are content to remain on low ground..."
+                    </div>
+                </div>
+            </div>
+
+            <div id="notepad-section" class="content-section">
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                        <i class="fas fa-pen-to-square" style="font-size: 1.6rem; color: #386a4e;"></i>
+                        <span style="font-weight: 650; color: #1c4939; font-size: 1.15rem;">Advanced Notepad · Folders & docs</span>
+                    </div>
+
+                    <div class="notepad-advanced">
+                        <div class="notepad-toolbar">
+                            <button id="newFolderBtn" class="notepad-btn"><i class="fas fa-folder-plus"></i> New folder</button>
+                            <button id="newDocBtn" class="notepad-btn"><i class="fas fa-file-circle-plus"></i> New document</button>
+                            <button id="deleteDocBtn" class="notepad-btn"><i class="fas fa-trash-can"></i> Delete</button>
+                        </div>
+
+                        <div class="folder-structure">
+                            <div id="folderContainer" class="folder-list">
+                                <div class="folder-header"><i class="fas fa-folders"></i> My folders</div>
+                                <div id="folderList"></div>
+                            </div>
+                            <div id="docContainer" class="doc-list">
+                                <div class="doc-header"><i class="fas fa-files"></i> Documents</div>
+                                <div id="docList"></div>
+                            </div>
+                        </div>
+
+                        <div class="notepad-editor">
+                            <textarea id="notepadContent" class="notepad-textarea" placeholder="Write your notes here..."></textarea>
+                            <div class="notepad-status">
+                                <span id="noteStatus">📄 Ready</span>
+                                <span><i class="fas fa-cloud"></i> offline storage</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-section" class="content-section">
+                <div class="settings-panel">
+                    <h3><i class="fas fa-gear"></i> Customise your portal</h3>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label><i class="fas fa-palette"></i> Theme accent</label>
+                            <div class="theme-selector" id="themeSelector">
+                                <div class="theme-btn active" data-theme="emerald" onclick="setTheme('emerald')"></div>
+                                <div class="theme-btn" data-theme="forest" onclick="setTheme('forest')"></div>
+                                <div class="theme-btn" data-theme="autumn" onclick="setTheme('autumn')"></div>
+                                <div class="theme-btn" data-theme="twilight" onclick="setTheme('twilight')"></div>
+                            </div>
+                            <p style="margin-top: 14px; color: #2d573d; font-size: 0.8rem;">Click to change colour theme</p>
+                        </div>
+                        <div class="setting-item">
+                            <label><i class="fas fa-text-height"></i> Text size</label>
+                            <div class="font-size-selector" id="fontSizeSelector">
+                                <span class="font-btn" data-size="small" onclick="setFontSize('small')">A</span>
+                                <span class="font-btn active" data-size="medium" onclick="setFontSize('medium')">A</span>
+                                <span class="font-btn" data-size="large" onclick="setFontSize('large')">A</span>
+                            </div>
+                            <p style="margin-top: 14px; color: #2d573d; font-size: 0.8rem;">Adjust verse / text size</p>
+                        </div>
+                        <div class="setting-item">
+                            <label><i class="fas fa-bell"></i> Devotion reminder</label>
+                            <div class="reminder-toggle" onclick="toggleReminder()">
+                                <i class="fas fa-toggle-on" style="font-size: 2.8rem; color: #1e6e4a;" id="reminderToggle"></i>
+                                <span id="reminderStatus" style="font-weight: 500;">Reminder ON</span>
+                            </div>
+                            <p style="margin-top: 10px; font-size: 0.8rem;">Daily quiet time alert</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
 </body>
 </html>
